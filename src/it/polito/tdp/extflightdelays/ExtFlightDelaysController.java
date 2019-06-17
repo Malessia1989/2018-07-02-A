@@ -9,13 +9,16 @@ package it.polito.tdp.extflightdelays;
 import java.net.URL;
 import java.util.ResourceBundle;
 
+import it.polito.tdp.extflightdelays.model.Airport;
 import it.polito.tdp.extflightdelays.model.Model;
 import javafx.event.ActionEvent;
 import javafx.fxml.FXML;
+import javafx.scene.control.Alert;
 import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.TextArea;
 import javafx.scene.control.TextField;
+import javafx.scene.control.Alert.AlertType;
 
 public class ExtFlightDelaysController {
 
@@ -37,7 +40,7 @@ public class ExtFlightDelaysController {
     private Button btnAnalizza; // Value injected by FXMLLoader
 
     @FXML // fx:id="cmbBoxAeroportoPartenza"
-    private ComboBox<?> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
+    private ComboBox<Airport> cmbBoxAeroportoPartenza; // Value injected by FXMLLoader
 
     @FXML // fx:id="btnAeroportiConnessi"
     private Button btnAeroportiConnessi; // Value injected by FXMLLoader
@@ -50,13 +53,43 @@ public class ExtFlightDelaysController {
 
     @FXML
     void doAnalizzaAeroporti(ActionEvent event) {
+    	
+		String dist = distanzaMinima.getText();
 
-    }
+		if (dist != null && !dist.isEmpty()) {
+			if (model.isValid(dist)) {
+				//faccio parsing e nel model il metodo avrà un int come parametro
+				this.model.creaGrafo(Integer.parseInt(dist));
+				txtResult.setText("Grafo creato, adesso puoi selezionare un aeroporto.");
+				cmbBoxAeroportoPartenza.getItems().addAll(model.getGrafo().vertexSet());
 
-    @FXML
+			} else {
+				showAlert("Inserire un valore valido");
+			}
+		} else {
+			showAlert("Inserire una distanza minima");
+		}
+	}
+
+    private void showAlert(String message) {
+    	Alert alert = new Alert(AlertType.ERROR);
+		alert.setContentText(message);
+		alert.show();
+		
+	}
+
+	@FXML
     void doCalcolaAeroportiConnessi(ActionEvent event) {
 
-    }
+		Airport selezionato = cmbBoxAeroportoPartenza.getValue();
+		
+		if (selezionato != null) {
+			String elencoConnessi = model.connessi(selezionato);
+			txtResult.setText(elencoConnessi);
+		} else {
+			showAlert("Selezionare un Aeroporto");
+		}
+	}
 
     @FXML
     void doCercaItinerario(ActionEvent event) {
@@ -77,6 +110,7 @@ public class ExtFlightDelaysController {
     
     public void setModel(Model model) {
 		this.model = model;
+		//cmbBoxAeroportoPartenza.getItems().addAll(model.getAirport());
 		
 	}
 }
